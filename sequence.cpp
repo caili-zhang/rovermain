@@ -2,9 +2,6 @@
 #include <math.h>
 #include <fstream>
 #include <functional>
-//#include <opencv2/opencv.hpp>
-//#include <opencv/cvaux.h>
-//#include <opencv/highgui.h>
 #include <stdarg.h>
 #include <wiringPi.h>
 #include "sequence.h"
@@ -13,10 +10,13 @@
 #include "sensor.h"
 #include "actuator.h"
 #include "motor.h"
-//#include "image_proc.h"
 #include "subsidiary_sequence.h"
 #include "delayed_execution.h"
 #include "constants.h"
+
+#include <string.h>
+#include <unistd.h>
+#include <stdio.h>
 
 Testing gTestingState;
 Waiting gWaitingState;
@@ -575,6 +575,7 @@ bool Navigating::onInit(const struct timespec& time)
 	mLastArmServoStopTime  = time;
 	mArmStopFlag = true;
 
+
 	mLastPos.clear();
 	return true;
 }
@@ -612,7 +613,7 @@ void Navigating::onUpdate(const struct timespec& time)
 	if (!gGPSSensor.get(currentPos, false))return;
 
 
-	//新しい座標であればバッファに追加
+	//新しい座標であればバッファに追加,finite()NaNをチェックする
 	if (isNewData && finite(currentPos.x) && finite(currentPos.y) && finite(currentPos.z))
 	{
 		//最初の座標を取得したら移動を開始する
@@ -633,18 +634,43 @@ void Navigating::onUpdate(const struct timespec& time)
 		mLastPos.push_back(currentPos);
 	}
 
-
-	//ゴールとの距離を確認
+	//ファイルから　GoalList を読み込む、GoalList に保存する
+	getGoalList(GoalList);
+	
+	//GoalListの最初にイテレータを置く
+	itr = GoalList.begin();
+	//最初の座標をゴールにする
+	mGoalPos = *itr;
+	//ゴールとの距離を確認+ 移動の方向と速度を計算して進む、calcDistanceXYなかで処理
 	double distance = VECTOR3::calcDistanceXY(currentPos, mGoalPos);
 	//double p = distance/distance_from_goal_to_start;
 	if (distance < NAVIGATING_GOAL_DISTANCE_THRESHOLD)
 	{
 		//ゴール判定
 		gMotorDrive.drive(0);
-		Debug::print(LOG_SUMMARY, "Navigating Finished!\r\n");
+		Debug::print(LOG_SUMMARY, "Navigating mGoalPos Finished!\r\n");
 		Debug::print(LOG_SUMMARY, "Navigating Finish Point:(%f %f)\r\n", currentPos.x, currentPos.y);
-		nextState();
-		return;
+		
+		//ファイナルゴールなら終わり
+			if (GoalList.Size==0) //リスト最後に辿り付いた、ファイナルゴールに到達、終了する
+			{
+				nextState();
+				return;
+			}
+			else
+			{	//GoalListのイテレータを増やす、つぎのゴースを設定
+				++itr;
+
+				//passedGoal のリストに保存する、passedGoal.txtファイルの中身に追加
+				writePassedGoal(PassedGoal,mGoalPos);
+
+				//探索済みのものを消す、ファイルの中身も消す
+				deleteGoalList(GoalList);
+				
+			}
+			
+		
+		
 	}
 	//数秒たっていなければ処理を返す
 	//if (Time::dt(time, mLastNaviMoveCheckTime) < NAVIGATING_DIRECTION_UPDATE_INTERVAL)return;
@@ -731,6 +757,7 @@ void Navigating::onUpdate(const struct timespec& time)
 	mLastPos.clear();
 	mLastPos.push_back(currentPos);
 }
+//GPSの誤差を取り除く、連続取ったGPSの値の平均値を取る、平均と連続値最初点のブレが大きいすぎると、削除する。
 bool Navigating::removeError()
 {
 	if (mLastPos.size() <= 2)return false;//最低2点は残す
@@ -794,7 +821,9 @@ void Navigating::navigationMove(double distance) const
 
 	//新しい角度を計算
 	VECTOR3 currentPos = mLastPos.back();
+	//現在進行方向の角度
 	double currentDirection = -VECTOR3::calcAngleXY(averagePos, currentPos);
+	//現在位置とゴールの角度
 	double newDirection = -VECTOR3::calcAngleXY(currentPos, mGoalPos);
 	double deltaDirection = GyroSensor::normalize(newDirection - currentDirection);
 	deltaDirection = std::max(std::min(deltaDirection, NAVIGATING_MAX_DELTA_DIRECTION), -1 * NAVIGATING_MAX_DELTA_DIRECTION);
@@ -810,7 +839,7 @@ void Navigating::navigationMove(double distance) const
 	Debug::print(LOG_SUMMARY, "NAVIGATING: Last %d samples (%f %f) Current(%f %f)\r\n", mLastPos.size(), averagePos.x, averagePos.y, currentPos.x, currentPos.y);
 	Debug::print(LOG_SUMMARY, "distance = %f (m)  delta angle = %f(%s)\r\n", distance * DEGREE_2_METER, deltaDirection, deltaDirection > 0 ? "LEFT" : "RIGHT");
 
-	//方向と速度を変更
+	//方向と速度を変更、ゴールに向かって前進
 	gMotorDrive.drivePIDGyro(deltaDirection, speed, true);
 }
 bool Navigating::onCommand(const std::vector<std::string>& args)
@@ -870,16 +899,103 @@ void Navigating::nextState()
 	Time::showNowTime();
 	Debug::print(LOG_SUMMARY, "Goal!\r\n");
 }
+
+
 void Navigating::setGoal(const VECTOR3& pos)
 {
 	mIsGoalPos = true;
 	mGoalPos = pos;
 	Debug::print(LOG_SUMMARY, "Set Goal ( %f %f )\r\n", mGoalPos.x, mGoalPos.y);
 }
+//メンバイニシャライザ、初期化する、空のmGoalPos,mLastPos 生成,mIsGoalPos=false
+//追加、ファイナルゴールの変数とフラグを作る
 Navigating::Navigating() : mGoalPos(), mIsGoalPos(false), mLastPos()
 {
 	setName("navigating");
 	setPriority(TASK_PRIORITY_SEQUENCE, TASK_INTERVAL_SEQUENCE);
+}
+
+Navigating::getGoalList(std::list<VECTOR3> GoalList) {//仮
+
+	//goallist 読み込む
+
+	//ファイルの読み込み
+	ifstream ifs("Test.txt");
+	if (!ifs) {
+		std::cout << "can not find file";
+	}
+
+	//txtファイルを1行ずつ読み込む
+	string str;
+
+	double x = 0.0, y = 0.0, z = 0.0;
+
+	//GoalList を空にする
+	GoalList.clear();
+	//一行ずつ読み込む、pos に保存する、pos をGoalListに保存する
+	while (getline(ifs, str)) {
+		x = 0.0, y = 0.0, z = 0.0;
+		sscanf(str.data(), "%f,%f,%f", &x, &y, &z);
+		pos = VECTOR3(x, y, z);
+		GoalList.push_back(pos);
+	}
+
+}
+
+//PassedGoal.txt に通過したゴールを書き込む
+Navigating::writePassedGoal(std::list<VECTOR3> &PassedGoal, VECTOR3 mGoalPos) {
+	PassedGoal.push_back(mGoalPos);
+
+	//一旦PassedGoal.txt を削除し
+	if (remove("PassedGoal.txt") == 0) {
+		//削除成功した
+	}
+	else {
+		std::out << "failled delete PassedGoal.txt" << endl;
+	}
+
+	std::string filename = "PassedGoal.txt";
+	ofstream writer(filename);
+
+	if (writer.is_open()) {
+		for (auto itr = PassedGoal.begin(); itr != PassedGoal.end(); ++itr) {
+			writer << *itr << "\n";
+		}
+	}
+	else {
+		writer << "Error" << endl;
+	}
+
+	writer.close();
+}
+
+//GoalList（削除済み）をGoalList.txtに書き込む
+Navigating::deleteGoalList(std::list<VECTOR3> &GoalList) {
+	//GoalList から通過したゴールを削除
+	GoalList.pop_front();
+
+	//一旦GoalList.txt を削除し
+	if (remove("GoalList.txt") == 0) {
+		//削除成功した
+	}
+	else {
+		std::out << "failled delete GoalList.txt" << endl;
+	}
+	
+	std::string filename = "GoalList.txt";
+	ofstream writer(filename);
+
+	if (writer.is_open()) {
+		for (auto itr = GoalList.begin(); itr != GoalList.end();++itr) {
+			writer << *itr << "\n";
+		}
+	}
+	else {
+		writer << "Error" << endl;
+	}
+
+	writer.close();
+
 }
 Navigating::~Navigating()
 {

@@ -304,7 +304,7 @@ VECTOR3 VECTOR3::normalize() const
 		return *this / length;
 	}
 }
-
+//構造体、VECTOR３オブジェクトを生成するやつ
 VECTOR3::VECTOR3() : x(0),y(0),z(0){}
 VECTOR3::VECTOR3(double tx, double ty, double tz) : x(tx),y(ty),z(tz){}
 
