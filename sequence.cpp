@@ -636,6 +636,7 @@ void Navigating::onUpdate(const struct timespec& time)
 	}
 
 	std::list<VECTOR3> GoalList;
+	std::list<VECTOR3> PassedList;
 	//ファイルから　GoalList を読み込む、GoalList に保存する
 	getGoalList(GoalList);
 	
@@ -938,7 +939,7 @@ void Navigating::getGoalList( std::list<VECTOR3>& GoalList) {//仮
 	//一行ずつ読み込む、pos に保存する、pos をGoalListに保存する
 	while (std::getline(ifs, str)) {
 		x = 0.0, y = 0.0, z = 0.0;
-		sscanf(str.data(), "%f,%f,%f", &x, &y, &z);
+		sscanf(str.data(), "%lf,%lf,%lf", &x, &y, &z);
 		VECTOR3 pos = VECTOR3(x, y, z);
 		GoalList.push_back(pos);
 	}
@@ -962,9 +963,11 @@ void Navigating::writePassedGoal(std::list<VECTOR3>& PassedGoal,  VECTOR3& mGoal
 	write_file.open(filename, std::ios::out);
 
 	if (write_file.is_open()) {
-		for (auto itr = PassedGoal.begin(); itr != PassedGoal.end(); ++itr) {
-			write_file<< *itr << "\n";
-		}
+		std::ostream_iterator<VECTOR3> output_iterator(write_file, "\n");
+		std::copy(PassedGoal.begin(), PassedGoal.end(), output_iterator);
+		//for (auto itr = PassedGoal.begin(); itr != PassedGoal.end(); ++itr) {
+			//write_file<< *itr << "\n";
+		//}
 	}
 	else {
 		write_file<< "Error" << std::endl;
@@ -991,9 +994,8 @@ void Navigating::deleteGoalList( std::list<VECTOR3>& GoalList) {
 	writer.open(filename, std::ios::out);
 
 	if (writer.is_open()) {
-		for (auto itr = GoalList.begin(); itr != GoalList.end();++itr) {
-			writer << *itr << "\n";
-		}
+		std::ostream_iterator<VECTOR3> output_iterator(writer, "\n");
+		std::copy(GoalList.begin(), GoalList.end(), output_iterator);
 	}
 	else {
 		writer << "Error" << std::endl;
