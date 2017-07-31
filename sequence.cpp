@@ -638,6 +638,7 @@ void Navigating::onUpdate(const struct timespec& time)
 	getGoalList(GoalList);
 	
 	//GoalListの最初にイテレータを置く
+	std::list<VECTOR3>::iterator itr;
 	itr = GoalList.begin();
 	//最初の座標をゴールにする
 	mGoalPos = *itr;
@@ -652,7 +653,7 @@ void Navigating::onUpdate(const struct timespec& time)
 		Debug::print(LOG_SUMMARY, "Navigating Finish Point:(%f %f)\r\n", currentPos.x, currentPos.y);
 		
 		//ファイナルゴールなら終わり
-			if (GoalList.Size()==0) //リスト最後に辿り付いた、ファイナルゴールに到達、終了する
+			if (GoalList.size()==0) //リスト最後に辿り付いた、ファイナルゴールに到達、終了する
 			{
 				nextState();
 				return;
@@ -915,12 +916,12 @@ Navigating::Navigating() : mGoalPos(), mIsGoalPos(false), mLastPos()
 	setPriority(TASK_PRIORITY_SEQUENCE, TASK_INTERVAL_SEQUENCE);
 }
 
-Navigating::getGoalList(std::list<VECTOR3> GoalList) {//仮
+Navigating::getGoalList(std::list<VECTOR3> &GoalList) {//仮
 
 	//goallist 読み込む
 
 	//ファイルの読み込み
-	ifstream ifs("Test.txt");
+	ifstream ifs("GoalList.txt");
 	if (!ifs) {
 		std::cout << "can not find file";
 	}
