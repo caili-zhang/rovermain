@@ -17,6 +17,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <list.h>
 
 Testing gTestingState;
 Waiting gWaitingState;
