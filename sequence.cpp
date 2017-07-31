@@ -652,7 +652,7 @@ void Navigating::onUpdate(const struct timespec& time)
 		Debug::print(LOG_SUMMARY, "Navigating Finish Point:(%f %f)\r\n", currentPos.x, currentPos.y);
 		
 		//ファイナルゴールなら終わり
-			if (GoalList.Size==0) //リスト最後に辿り付いた、ファイナルゴールに到達、終了する
+			if (GoalList.Size()==0) //リスト最後に辿り付いた、ファイナルゴールに到達、終了する
 			{
 				nextState();
 				return;
