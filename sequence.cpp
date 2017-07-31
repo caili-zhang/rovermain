@@ -918,7 +918,7 @@ Navigating::Navigating() : mGoalPos(), mIsGoalPos(false), mLastPos()
 	setPriority(TASK_PRIORITY_SEQUENCE, TASK_INTERVAL_SEQUENCE);
 }
 
-Navigating::getGoalList(std::list<VECTOR3> &GoalList) {//仮
+Navigating::getGoalList(const std::list<VECTOR3>& GoalList) {//仮
 
 	//goallist 読み込む
 
@@ -946,7 +946,7 @@ Navigating::getGoalList(std::list<VECTOR3> &GoalList) {//仮
 }
 
 //PassedGoal.txt に通過したゴールを書き込む
-Navigating::writePassedGoal(std::list<VECTOR3> &PassedGoal, VECTOR3 mGoalPos) {
+Navigating::writePassedGoal(const std::list<VECTOR3>& PassedGoal, const VECTOR3& mGoalPos) {
 	PassedGoal.push_back(mGoalPos);
 
 	//一旦PassedGoal.txt を削除し
@@ -973,7 +973,7 @@ Navigating::writePassedGoal(std::list<VECTOR3> &PassedGoal, VECTOR3 mGoalPos) {
 }
 
 //GoalList（削除済み）をGoalList.txtに書き込む
-Navigating::deleteGoalList(std::list<VECTOR3> &GoalList) {
+Navigating::deleteGoalList(const std::list<VECTOR3>& GoalList) {
 	//GoalList から通過したゴールを削除
 	GoalList.pop_front();
 
