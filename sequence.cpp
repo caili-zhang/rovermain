@@ -958,18 +958,19 @@ void Navigating::writePassedGoal(std::list<VECTOR3>& PassedGoal,  VECTOR3& mGoal
 	}
 
 	std::string filename = "PassedGoal.txt";
-	std::ofstream writer(filename);
+	std::ofstream write_file;
+	write_file.open(filename, std::ios::out);
 
-	if (writer.is_open()) {
+	if (write_file.is_open()) {
 		for (auto itr = PassedGoal.begin(); itr != PassedGoal.end(); ++itr) {
-			writer << *itr << "\n";
+			write_file<< *itr << "\n";
 		}
 	}
 	else {
-		writer << "Error" << std::endl;
+		write_file<< "Error" << std::endl;
 	}
 
-	writer.close();
+	write_file.close();
 }
 
 //GoalList（削除済み）をGoalList.txtに書き込む
