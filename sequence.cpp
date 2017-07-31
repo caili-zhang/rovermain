@@ -634,6 +634,7 @@ void Navigating::onUpdate(const struct timespec& time)
 		mLastPos.push_back(currentPos);
 	}
 
+	std::list<VECTOR3> GoalList;
 	//ファイルから　GoalList を読み込む、GoalList に保存する
 	getGoalList(GoalList);
 	
