@@ -987,7 +987,8 @@ void Navigating::deleteGoalList( std::list<VECTOR3>& GoalList) {
 	}
 	
 	std::string filename = "GoalList.txt";
-	ofstream writer(filename);
+	ofstream writer;
+	writer.open(filename, std::ios::out);
 
 	if (writer.is_open()) {
 		for (auto itr = GoalList.begin(); itr != GoalList.end();++itr) {
@@ -995,7 +996,7 @@ void Navigating::deleteGoalList( std::list<VECTOR3>& GoalList) {
 		}
 	}
 	else {
-		writer << "Error" << endl;
+		writer << "Error" << std::endl;
 	}
 
 	writer.close();
