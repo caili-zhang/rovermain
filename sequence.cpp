@@ -923,7 +923,7 @@ void Navigating::getGoalList(const std::list<VECTOR3>& GoalList) {//仮
 	//goallist 読み込む
 
 	//ファイルの読み込み
-	ifstream ifs("GoalList.txt");
+	std::ifstream ifs("GoalList.txt");
 	if (!ifs) {
 		std::cout << "can not find file";
 	}
