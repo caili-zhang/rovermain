@@ -983,11 +983,11 @@ void Navigating::deleteGoalList( std::list<VECTOR3>& GoalList) {
 		//削除成功した
 	}
 	else {
-		std::out << "failled delete GoalList.txt" << endl;
+		std::cout << "failled delete GoalList.txt" << std::endl;
 	}
 	
 	std::string filename = "GoalList.txt";
-	ofstream writer;
+	std::ofstream writer;
 	writer.open(filename, std::ios::out);
 
 	if (writer.is_open()) {
