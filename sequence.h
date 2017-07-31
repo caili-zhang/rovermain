@@ -1,6 +1,7 @@
 #pragma once
 #include <time.h>
 #include <list>
+#include <iostream>
 //#include <opencv2/opencv.hpp>
 //#include <opencv/cvaux.h>
 //#include <opencv/highgui.h>
