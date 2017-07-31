@@ -954,11 +954,11 @@ void Navigating::writePassedGoal(std::list<VECTOR3>& PassedGoal,  VECTOR3& mGoal
 		//削除成功した
 	}
 	else {
-		std::out << "failled delete PassedGoal.txt" << endl;
+		std::cout << "failled delete PassedGoal.txt" << std::endl;
 	}
 
 	std::string filename = "PassedGoal.txt";
-	ofstream writer(filename);
+	std::ofstream writer(filename);
 
 	if (writer.is_open()) {
 		for (auto itr = PassedGoal.begin(); itr != PassedGoal.end(); ++itr) {
@@ -966,7 +966,7 @@ void Navigating::writePassedGoal(std::list<VECTOR3>& PassedGoal,  VECTOR3& mGoal
 		}
 	}
 	else {
-		writer << "Error" << endl;
+		writer << "Error" << std::endl;
 	}
 
 	writer.close();
