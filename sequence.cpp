@@ -17,6 +17,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <iterator>
+#include <iostream>
 
 
 Testing gTestingState;
