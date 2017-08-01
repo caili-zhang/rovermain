@@ -908,15 +908,11 @@ void Navigating::deleteGoalList( std::list<VECTOR3>& GoalList) {
 	}
 	
 	std::string filename = "GoalList.txt";
-	std::ofstream writer;
-	writer.open(filename, std::ios::out);
+	std::ofstream write_file;
+	write_file.open(filename, std::ios::out);
 
-	if (writer.is_open()) {
-		std::ostream_iterator<VECTOR3> output_iterator(writer, "\n");
-		std::copy(GoalList.begin(), GoalList.end(), output_iterator);
-	}
-	else {
-		writer << "Error" << std::endl;
+	for (auto itr = GoalList.begin(); itr != GoalList.end(); ++itr) {
+		write_file << itr->x << "," << itr->y << "," << itr->z << std::endl;
 	}
 
 	
