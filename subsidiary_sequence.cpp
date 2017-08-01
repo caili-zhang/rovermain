@@ -305,34 +305,7 @@ void Escaping::stuckMoveRandom()
 		break;
 	}
 }
-/*
-void Escaping::stuckMoveCamera(IplImage* pImage)
-{
-	switch (gImageProc.wadachiExiting(pImage)) {
-	case -1:
-		Debug::print(LOG_SUMMARY, "Wadachi kaihi:Turn Left\r\n");
-		gMotorDrive.drive(-100, 100);
-		mCurStep = STEP_CAMERA_TURN;
-		break;
-	case 1:
-		Debug::print(LOG_SUMMARY, "Wadachi kaihi:Turn Right\r\n");
-		gMotorDrive.drive(100, -100);
-		mCurStep = STEP_CAMERA_TURN;
-		break;
-	case 0:
-		Debug::print(LOG_SUMMARY, "Wadachi kaihi:Turn here\r\n");
-		gTurningState.setRunMode(true);
-		gTurningState.setDirection(true);
-		mCurStep = STEP_CAMERA_TURN_HERE;
-		break;
-	default://�J�����g���Ȃ�����
-		mCurStep = STEP_RANDOM;
-		mCurRandomStep = RANDOM_STEP_FORWARD;
-		break;
 
-	}
-	}
-*/
 Escaping::Escaping()
 {
 	setName("escaping");
@@ -349,8 +322,7 @@ bool EscapingByStabi::onInit(const struct timespec& time)
 
 	mLastUpdateTime = time;
 	gMultiServo.setRunMode(true);
-	//gJohnServo.setRunMode(true);
-	//gMotorDrive.drive(20);
+
 	mFlag = false;
 	mTryCount = 0;
 	return true;
@@ -507,9 +479,7 @@ void Waking::onUpdate(const struct timespec& time)
 		}
 		//gJohnServo.start(FRONT_STABI_FOLD_ANGLE);//角度調節
 		gMultiServo.start(BACK_STABI_RUN_ANGLE);
-		//gArmServo.start(ARM_FOLD_ANGLE);
-		//gNeckServo.start(NECK_FOLD_ANGLE);
-		// Do following case without breaking
+		
 	case STEP_WAIT_LIE:
 		if (gWakingFromLieState.isActive())return;
 		//begin waking
@@ -536,9 +506,7 @@ void Waking::onUpdate(const struct timespec& time)
 
 		}
 
-		//���]�����p�x�ɉ����ă��[�^�̏o�͂��ω�������
-		//power = std::min(0,std::max(100,MOTOR_MAX_POWER - abs(gGyroSensor.getRvx() - mAngleOnBegin) / 130 + 50));
-		//gMotorDrive.drive(power);
+		
 		break;
 
 		double dt;
@@ -860,47 +828,7 @@ Avoiding::~Avoiding()
 {
 }
 
-/*
-bool PictureTaking::onInit(const struct timespec& time)
-{
-	mLastUpdateTime = time;
-	gCameraCapture.setRunMode(true);
-	gBuzzer.setRunMode(true);
-	gWakingState.setRunMode(true);
-	mStepCount = 0;
-	return true;
-}
-void PictureTaking::onUpdate(const struct timespec& time)
-{
-	if (gWakingState.isActive())return;
-	if (Time::dt(time, mLastUpdateTime) > 1)
-	{
-		mLastUpdateTime = time;
-		++mStepCount;
-		gBuzzer.start(mStepCount > 25 ? 30 : 10);
 
-		if (mStepCount == 25)
-		{
-			gCameraCapture.startWarming();
-		}
-		if (mStepCount >= 30)
-		{
-			Debug::print(LOG_SUMMARY, "Say cheese!\r\n");
-			setRunMode(false);
-			gBuzzer.start(300);
-			gCameraCapture.save();
-		}
-	}
-}
-PictureTaking::PictureTaking() : mStepCount(0)
-{
-	setName("kinen");
-	setPriority(TASK_PRIORITY_SEQUENCE, TASK_INTERVAL_SEQUENCE);
-}
-PictureTaking::~PictureTaking()
-{
-}
-*/
 bool SensorLogging::onInit(const struct timespec& time)
 {
 	Debug::print(LOG_SUMMARY, "Log: Enabled\r\n");
@@ -1201,25 +1129,6 @@ void EncoderMonitoring::onUpdate(const struct timespec& time)
 		return;
 	}
 
-	//臒l�̌v�Z
-	//	long long pulse_threshold = std::min(abs(mStoredPulse - mThresholdPulse), //ab//s(mUpperThreshold));
-	//
-	////�X�^�b�N�`�F�b�N�D�O����臒l�ȏ��ŁC������臒l�ȉ��Ȃ��X�^�b�N���肷��
-	//if (mPrevDeltaPulseL >= pulse_threshold && mPrevDeltaPulseR >= pulse_threshold)	//�O���̃p���X����臒l�ȏ�
-	//{
-	//	//if (deltaPulseL < pulse_threshold || deltaPulseR < pulse_threshold)			//�����̃p���X����臒l�ȉ�
-	//	if ((deltaPulseL + deltaPulseR) / 2 < pulse_threshold)			//�����̃p���X����臒l�ȉ�
-	//	{
-	//		//�X�^�b�N����
-	//		gBuzzer.start(80, 10, 6);
-	//		Debug::print(LOG_SUMMARY, "EncoderMonitoring: STUCK detected by pulse count(%llu %llu). Threshold:%llu\r\n", deltaPulseL, deltaPulseR, pulse_threshold);
-	//		gEscapingByStabiState.setRunMode(true);
-	//		setRunMode(false);
-	//		return;
-	//	}
-	//}
-
-	//�O���̃p���X�̍X�V
 	mPrevDeltaPulseL = deltaPulseL;
 	mPrevDeltaPulseR = deltaPulseR;
 
@@ -1402,71 +1311,4 @@ EncoderMonitoring::EncoderMonitoring() : mLastSamplingTime(), mLastUpdateTime(),
 EncoderMonitoring::~EncoderMonitoring()
 {
 }
-/*
-bool CameraSave_Sequence::onInit(const struct timespec& time) {
-	Debug::print(LOG_SUMMARY, "Start Camera Save Sequence...");
-	Time::showNowTime();
-	gCameraCapture.setRunMode(true);
-	mLastUpdateTime = time;
-	timing = 1.0;
-	mIsUpdateCamera = false;
-	mIsUpdateWadati = false;
-	return true;
-}
-void CameraSave_Sequence::onUpdate(const struct timespec& time) {
-	if (mIsUpdateCamera) {
-		if (Time::dt(time, mLastUpdateTime) > timing) {
-			Time::showNowTime();
-			mLastUpdateTime = time;
-			gCameraCapture.startWarming();
-			if (mIsUpdateWadati) {
-				gCameraCapture.wadatisave();
-			}
-			else {
-				gCameraCapture.save();
-			}
-		}
-	}
-}
-bool CameraSave_Sequence::onCommand(const std::vector<std::string>& args) {
-	if (args.size() == 2) {
-		if (args[1].compare("stop") == 0) {
-			setRunMode(false);
-			return true;
-		}
-		else if (args[1].compare("start") == 0) {
-			mIsUpdateCamera = true;
-			return true;
-		}
-	}
-	else if (args.size() == 3) {
-		if (args[1].compare("timing") == 0) {
-			timing = atof(args[2].c_str());
-			Debug::print(LOG_SUMMARY, "Camera Save timing is %f\n", timing);
-			return true;
-		}
-		else if (args[1].compare("wadati") == 0) {
-			if (args[2].compare("start") == 0) {
-				mIsUpdateWadati = true;
-				return true;
-			}
-			else if (args[2].compare("stop") == 0) {
-				mIsUpdateWadati = false;
-				return true;
-			}
-		}
-	}
-	Debug::print(LOG_SUMMARY, "camera_s\n"
-		"start : camera start\n"
-		"stop : camera stop\n"
-		"timing [number] : timing setting\n"
-		"wadati [start/stop] : wadati detection [start/stop]\n");
-	return false;
-}
-CameraSave_Sequence::CameraSave_Sequence() {
-	setName("camera_s");
-	setPriority(TASK_PRIORITY_SEQUENCE, TASK_INTERVAL_SEQUENCE);
-}
-CameraSave_Sequence::~CameraSave_Sequence() {
-}
-*/
+
