@@ -547,6 +547,23 @@ void Navigating::onUpdate(const struct timespec& time)
 	//gNeckServo.start(NECK_RUN_ANGLE);
 	VECTOR3 currentPos;
 
+	//５秒置きに、GoalList を読み込む
+	if (Time::dt(time, mLastArmServoStopTime) > 5.0) {
+		std::list<VECTOR3> GoalList;
+		std::list<VECTOR3> PassedList;
+		//ファイルから　GoalList を読み込む、GoalList に保存する
+		getGoalList(GoalList);
+
+		//GoalListの最初にイテレータを置く
+		std::list<VECTOR3>::iterator itr;
+		itr = GoalList.begin();
+		//最初の座標をゴールにする
+		mGoalPos = *itr;
+		mIsGoalPos = true;
+	}
+	
+
+
 	//ゴールが設定されているか確認
 	if (!mIsGoalPos)
 	{
@@ -596,16 +613,7 @@ void Navigating::onUpdate(const struct timespec& time)
 		mLastPos.push_back(currentPos);
 	}
 
-	std::list<VECTOR3> GoalList;
-	std::list<VECTOR3> PassedList;
-	//ファイルから　GoalList を読み込む、GoalList に保存する
-	getGoalList(GoalList);
 	
-	//GoalListの最初にイテレータを置く
-	std::list<VECTOR3>::iterator itr;
-	itr = GoalList.begin();
-	//最初の座標をゴールにする
-	mGoalPos = *itr;
 	//ゴールとの距離を確認+ 移動の方向と速度を計算して進む、calcDistanceXYなかで処理
 	double distance = VECTOR3::calcDistanceXY(currentPos, mGoalPos);
 	//double p = distance/distance_from_goal_to_start;
